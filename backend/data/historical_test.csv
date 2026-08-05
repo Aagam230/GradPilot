@@ -1,0 +1,11 @@
+canonical_university,canonical_program,application_year,decision,gpa_value,gpa_scale,gre_total,gre_quant,gre_verbal,toefl,ielts,undergraduate_major,undergraduate_country,research_experience,publication_count,work_experience_months,source_type,source_url,data_quality_score
+Arizona State University,MS Computer Science,2025,admitted,8.8,10,321,166,155,112,,Computer Science,India,yes,1,12,test,,0.9
+Arizona State University,MS Computer Science,2025,admitted,8.5,10,316,163,153,108,,Electronics Engineering,India,yes,1,6,test,,0.9
+Arizona State University,MS Computer Science,2025,rejected,7.6,10,305,155,150,101,,Computer Science,India,no,0,0,test,,0.9
+Arizona State University,MS Computer Science,2024,rejected,8.0,10,309,158,151,105,,Electronics Engineering,India,no,0,3,test,,0.9
+Arizona State University,MS Computer Science,2024,admitted,9.1,10,325,168,157,115,,Computer Science,India,yes,2,18,test,,0.9
+Nanyang Technological University,MSc Artificial Intelligence,2025,admitted,8.9,10,322,166,156,110,,Computer Science,India,yes,1,12,test,,0.9
+Nanyang Technological University,MSc Artificial Intelligence,2025,rejected,7.8,10,308,158,150,103,,Electronics Engineering,India,no,0,0,test,,0.9
+Nanyang Technological University,MSc Artificial Intelligence,2024,admitted,8.6,10,318,164,154,109,,Electronics Engineering,India,yes,1,8,test,,0.9
+Nanyang Technological University,MSc Artificial Intelligence,2024,rejected,8.1,10,310,159,151,105,,Computer Science,India,no,0,4,test,,0.9
+Nanyang Technological University,MSc Artificial Intelligence,2024,admitted,9.0,10,324,167,157,114,,Computer Science,India,yes,2,20,test,,0.9
