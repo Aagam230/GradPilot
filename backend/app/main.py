@@ -1,22 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
 from .config import settings
 from .db import engine, Base
-from .routers import upload, program, analysis
+from .routers import upload, program, analysis, jobs
 
-
-app = FastAPI(
-    title="GradPilot API",
-    version="0.1.0"
-)
-
-
-# ---------------------------------------------------------
-# CORS
-# Allow the local Next.js frontend to communicate with
-# the FastAPI backend.
-# ---------------------------------------------------------
+app = FastAPI(title="GradPilot API", version="0.1.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,31 +17,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# ---------------------------------------------------------
-# ROUTERS
-# ---------------------------------------------------------
-
 app.include_router(upload.router)
 app.include_router(program.router)
 app.include_router(analysis.router)
+app.include_router(jobs.router)
 
-
-# ---------------------------------------------------------
-# DATABASE STARTUP
-# ---------------------------------------------------------
 
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
 
 
-# ---------------------------------------------------------
-# HEALTH CHECK
-# ---------------------------------------------------------
-
 @app.get("/api/health")
 def health():
-    return {
-        "status": "ok"
-    }
+    return {"status": "ok"}
