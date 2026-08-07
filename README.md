@@ -24,21 +24,6 @@ Evidence-driven graduate admissions decision-support platform.
 - Next.js 14 frontend
 - Docker Compose database
 
-## Local configuration
-
-Copy `backend/.env.example` to `backend/.env` and fill in your own API keys. The checked-in configuration uses:
-
-```env
-DATABASE_URL=postgresql+psycopg2://gradpilot:gradpilot@localhost:5432/gradpilot
-LLM_PROVIDER=groq
-LLM_MODEL=llama-3.3-70b-versatile
-EMBEDDING_PROVIDER=sentence_transformers
-EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
-CORS_ORIGINS=http://localhost:3000
-```
-
-The Docker Compose database is exposed on host port **5432**, so the backend database URL must also use port **5432**.
-
 ## Run on Windows (existing local environment)
 
 From the project root:
@@ -67,13 +52,7 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Migration order
 
-The migration history is intentionally linear and matches the local workflow developed for this project:
-
-`bd6f55d8bc74 -> e98e8ac7efec -> c31a7e42f9b1 -> 6e3b6d6f5875 -> 2f895c75588d -> 4e4dc6b13b10 -> 49e99f2f0ad1 -> a695242f983c -> 7c0a4f91b2d0`
-
-If an existing database reports `6e3b6d6f5875`, `upgrade head` applies only the later migrations. The historical-table migration itself is duplicate-table safe.
 
 ## Important
 
