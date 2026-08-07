@@ -5,7 +5,7 @@ services:
       POSTGRES_USER: gradpilot
       POSTGRES_PASSWORD: gradpilot
       POSTGRES_DB: gradpilot
-    ports: ["55432:5432"]
+    ports: ["55572:5432"]
     volumes: ["pgdata:/var/lib/postgresql/data"]
 volumes:
   pgdata:

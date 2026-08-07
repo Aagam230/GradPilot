@@ -1,13 +1,14 @@
 "use client";
 import { motion } from "framer-motion";
-import { TrendingUp, Target, ShieldCheck, HelpCircle } from "lucide-react";
+import { TrendingUp, TrendingUpDown, Target, ShieldCheck, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const CONFIG: Record<string, { icon: any; color: string; bg: string; label: string }> = {
-  "Very High Reach": { icon: TrendingUp, color: "text-reach", bg: "bg-reach/10 border-reach/30", label: "Very High Reach" },
+  "Very High Reach": { icon: TrendingUpDown, color: "text-reach", bg: "bg-reach/10 border-reach/30", label: "Very High Reach" },
   Reach: { icon: TrendingUp, color: "text-reach", bg: "bg-reach/10 border-reach/30", label: "Reach" },
   Target: { icon: Target, color: "text-target", bg: "bg-target/10 border-target/30", label: "Target" },
   Likely: { icon: ShieldCheck, color: "text-likely", bg: "bg-likely/10 border-likely/30", label: "Likely" },
+  "Insufficient Evidence": { icon: HelpCircle, color: "text-ink-faint", bg: "bg-surface-2 border-border", label: "Insufficient Evidence" },
 };
 
 export function ClassificationBadge({ classification }: { classification: string }) {
@@ -15,7 +16,7 @@ export function ClassificationBadge({ classification }: { classification: string
     icon: HelpCircle,
     color: "text-ink-faint",
     bg: "bg-surface-2 border-border",
-    label: classification || "Insufficient evidence",
+    label: classification || "Insufficient Evidence",
   };
   const Icon = cfg.icon;
   return (

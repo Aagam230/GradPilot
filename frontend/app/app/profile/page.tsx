@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -11,15 +12,96 @@ import {
   PenLine,
   FileStack,
   UploadCloud,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/EmptyState";
 import { Reveal } from "@/components/Reveal";
+import { ListFieldEditor } from "@/components/editor/ListFieldEditor";
+import { TagsEditor } from "@/components/editor/TagsEditor";
 import { useAppState } from "@/lib/store";
+import { updateProfile } from "@/lib/api";
+
+const EDITABLE_ARRAY_FIELDS = {
+  education: [
+    { key: "degree", label: "Degree" },
+    { key: "field", label: "Field" },
+    { key: "institution", label: "Institution" },
+    { key: "gpa", label: "GPA" },
+    { key: "years", label: "Years" },
+  ],
+  research_experience: [
+    { key: "title", label: "Title" },
+    { key: "duration", label: "Duration" },
+    { key: "description", label: "Description", textarea: true },
+  ],
+  projects: [
+    { key: "title", label: "Title" },
+    { key: "tech", label: "Tech (comma-separated)" },
+    { key: "description", label: "Description", textarea: true },
+  ],
+  work_experience: [
+    { key: "role", label: "Role" },
+    { key: "organization", label: "Organization" },
+    { key: "duration", label: "Duration" },
+    { key: "description", label: "Description", textarea: true },
+  ],
+  publications: [
+    { key: "title", label: "Title" },
+    { key: "venue", label: "Venue" },
+    { key: "year", label: "Year" },
+  ],
+  test_scores: [
+    { key: "test", label: "Test" },
+    { key: "score", label: "Score" },
+  ],
+} as const;
+
+const EMPTY_ITEMS: Record<string, Record<string, any>> = {
+  education: { degree: "", field: "", institution: "", gpa: "", years: "" },
+  research_experience: { title: "", duration: "", description: "" },
+  projects: { title: "", tech: "", description: "" },
+  work_experience: { role: "", organization: "", duration: "", description: "" },
+  publications: { title: "", venue: "", year: "" },
+  test_scores: { test: "", score: "" },
+};
+
+function toDraft(profile: any) {
+  return {
+    name: profile.name || "",
+    summary: profile.summary || "",
+    goals_and_motivation: profile.goals_and_motivation || "",
+    education: profile.education || [],
+    research_experience: profile.research_experience || [],
+    projects: (profile.projects || []).map((p: any) => ({ ...p, tech: (p.tech || []).join(", ") })),
+    work_experience: profile.work_experience || [],
+    publications: profile.publications || [],
+    test_scores: profile.test_scores || [],
+    skills: profile.skills || [],
+    awards: profile.awards || [],
+    coursework_highlights: profile.coursework_highlights || [],
+  };
+}
+
+function fromDraft(draft: any) {
+  return {
+    ...draft,
+    projects: draft.projects.map((p: any) => ({
+      ...p,
+      tech: typeof p.tech === "string" ? p.tech.split(",").map((t: string) => t.trim()).filter(Boolean) : p.tech,
+    })),
+  };
+}
 
 export default function ProfilePage() {
-  const { profile, documents, fileName } = useAppState();
+  const { profile, documents, setProfile, profileId } = useAppState();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<any>(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!profile) {
     return (
@@ -40,50 +122,140 @@ export default function ProfilePage() {
     );
   }
 
-  const education = profile.education || [];
-  const research = profile.research_experience || [];
-  const projects = profile.projects || [];
-  const work = profile.work_experience || [];
-  const publications = profile.publications || [];
-  const skills = profile.skills || [];
-  const testScores = profile.test_scores || [];
-  const awards = profile.awards || [];
-  const coursework = profile.coursework_highlights || [];
-  const goals = profile.goals_and_motivation as string | null;
-  const conflicts = profile.evidence_conflicts || [];
-  const provenance = profile.source_provenance || [];
+  function startEditing() {
+    setDraft(toDraft(profile));
+    setEditing(true);
+    setError(null);
+  }
+
+  function cancelEditing() {
+    setEditing(false);
+    setDraft(null);
+    setError(null);
+  }
+
+  async function saveEditing() {
+    if (!profileId || !draft) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const payload = fromDraft(draft);
+      const data = await updateProfile(profileId, payload);
+      setProfile(data.profile_id, data.profile, data.documents);
+      setEditing(false);
+      setDraft(null);
+    } catch (e: any) {
+      setError(e.message || "Could not save changes");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const active = editing ? draft : profile;
+  const education = active.education || [];
+  const research = active.research_experience || [];
+  const projects = active.projects || [];
+  const work = active.work_experience || [];
+  const publications = active.publications || [];
+  const skills = active.skills || [];
+  const testScores = active.test_scores || [];
+  const awards = active.awards || [];
+  const coursework = active.coursework_highlights || [];
+  const goals = active.goals_and_motivation as string | null;
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight mb-1">
-            {profile.name || "Your profile"}
-          </h1>
-          <p className="text-ink-muted text-sm">
-            Built from {documents.length} document{documents.length === 1 ? "" : "s"} · {profile.summary}
-          </p>
+      <div className="flex items-start justify-between mb-8 gap-4">
+        <div className="flex-1">
+          {editing ? (
+            <input
+              value={draft.name}
+              onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+              placeholder="Your name"
+              className="text-2xl font-semibold tracking-tight mb-1 bg-transparent border-b border-border focus:border-accent outline-none w-full"
+            />
+          ) : (
+            <h1 className="text-2xl font-semibold tracking-tight mb-1">{profile.name || "Your profile"}</h1>
+          )}
+          {editing ? (
+            <textarea
+              value={draft.summary}
+              onChange={(e) => setDraft({ ...draft, summary: e.target.value })}
+              placeholder="Summary"
+              rows={2}
+              className="text-sm text-ink-muted bg-transparent border border-border rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-accent/30 w-full mt-1"
+            />
+          ) : (
+            <p className="text-ink-muted text-sm">
+              Built from {documents.length} document{documents.length === 1 ? "" : "s"} · {profile.summary}
+            </p>
+          )}
         </div>
+
+        {editing ? (
+          <div className="flex items-center gap-2 shrink-0">
+            <Button size="sm" variant="secondary" onClick={cancelEditing} disabled={saving}>
+              <X size={14} /> Cancel
+            </Button>
+            <Button size="sm" onClick={saveEditing} disabled={saving}>
+              <Check size={14} /> {saving ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        ) : (
+          <Button size="sm" variant="secondary" onClick={startEditing} className="shrink-0">
+            <Pencil size={13} /> Edit
+          </Button>
+        )}
       </div>
+
+      {error && (
+        <div className="mb-6 text-sm text-reach bg-reach/10 border border-reach/20 rounded-lg px-3 py-2">
+          {error}
+        </div>
+      )}
+      {editing && (
+        <div className="mb-6 text-xs text-ink-faint bg-surface-2/60 border border-border rounded-lg px-3 py-2">
+          Correct anything GradPilot got wrong — your edits are kept even if you upload more
+          documents later.
+        </div>
+      )}
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {goals && (
+          {(goals || editing) && (
             <Reveal delay={0.02}>
               <Card className="p-5 bg-accent-soft/30 border-accent/20">
                 <h2 className="flex items-center gap-2 text-sm font-medium text-ink mb-2">
                   <PenLine size={15} className="text-accent" strokeWidth={1.8} />
                   Goals &amp; motivation
                 </h2>
-                <p className="text-sm text-ink-muted leading-relaxed">{goals}</p>
-                <p className="text-[11px] text-ink-faint mt-2">From your Statement of Purpose.</p>
+                {editing ? (
+                  <textarea
+                    value={draft.goals_and_motivation}
+                    onChange={(e) => setDraft({ ...draft, goals_and_motivation: e.target.value })}
+                    rows={3}
+                    className="w-full text-sm border border-border bg-surface-2/40 rounded-lg px-2.5 py-1.5 outline-none focus:ring-2 focus:ring-accent/30"
+                  />
+                ) : (
+                  <>
+                    <p className="text-sm text-ink-muted leading-relaxed">{goals}</p>
+                    <p className="text-[11px] text-ink-faint mt-2">From your Statement of Purpose.</p>
+                  </>
+                )}
               </Card>
             </Reveal>
           )}
 
           <Reveal>
             <Section icon={GraduationCap} title="Academics">
-              {education.length === 0 ? (
+              {editing ? (
+                <ListFieldEditor
+                  items={education}
+                  fields={EDITABLE_ARRAY_FIELDS.education as any}
+                  emptyItem={EMPTY_ITEMS.education}
+                  onChange={(items) => setDraft({ ...draft, education: items })}
+                />
+              ) : education.length === 0 ? (
                 <EmptyRow text="No education entries found." />
               ) : (
                 <Timeline
@@ -94,17 +266,26 @@ export default function ProfilePage() {
                   }))}
                 />
               )}
-              {coursework.length > 0 && (
+              {(coursework.length > 0 || editing) && (
                 <div className="mt-4 pt-4 border-t border-border">
                   <p className="text-xs font-medium text-ink-faint uppercase tracking-wide mb-2">
                     Coursework highlights
                   </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {coursework.map((c: string) => (
-                      <Tag key={c}>{c}</Tag>
-                    ))}
-                  </div>
-                  <p className="text-[11px] text-ink-faint mt-2">From your transcript.</p>
+                  {editing ? (
+                    <TagsEditor
+                      value={coursework}
+                      onChange={(v) => setDraft({ ...draft, coursework_highlights: v })}
+                    />
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap gap-1.5">
+                        {coursework.map((c: string) => (
+                          <Tag key={c}>{c}</Tag>
+                        ))}
+                      </div>
+                      <p className="text-[11px] text-ink-faint mt-2">From your transcript.</p>
+                    </>
+                  )}
                 </div>
               )}
             </Section>
@@ -112,7 +293,14 @@ export default function ProfilePage() {
 
           <Reveal delay={0.05}>
             <Section icon={FlaskConical} title="Research">
-              {research.length === 0 ? (
+              {editing ? (
+                <ListFieldEditor
+                  items={research}
+                  fields={EDITABLE_ARRAY_FIELDS.research_experience as any}
+                  emptyItem={EMPTY_ITEMS.research_experience}
+                  onChange={(items) => setDraft({ ...draft, research_experience: items })}
+                />
+              ) : research.length === 0 ? (
                 <EmptyRow text="No research experience found." />
               ) : (
                 <Timeline
@@ -128,7 +316,14 @@ export default function ProfilePage() {
 
           <Reveal delay={0.1}>
             <Section icon={Boxes} title="Projects">
-              {projects.length === 0 ? (
+              {editing ? (
+                <ListFieldEditor
+                  items={projects}
+                  fields={EDITABLE_ARRAY_FIELDS.projects as any}
+                  emptyItem={EMPTY_ITEMS.projects}
+                  onChange={(items) => setDraft({ ...draft, projects: items })}
+                />
+              ) : projects.length === 0 ? (
                 <EmptyRow text="No projects found." />
               ) : (
                 <div className="grid sm:grid-cols-2 gap-3">
@@ -150,7 +345,14 @@ export default function ProfilePage() {
 
           <Reveal delay={0.15}>
             <Section icon={Briefcase} title="Experience">
-              {work.length === 0 ? (
+              {editing ? (
+                <ListFieldEditor
+                  items={work}
+                  fields={EDITABLE_ARRAY_FIELDS.work_experience as any}
+                  emptyItem={EMPTY_ITEMS.work_experience}
+                  onChange={(items) => setDraft({ ...draft, work_experience: items })}
+                />
+              ) : work.length === 0 ? (
                 <EmptyRow text="No work experience found." />
               ) : (
                 <Timeline
@@ -164,32 +366,25 @@ export default function ProfilePage() {
             </Section>
           </Reveal>
 
-          {conflicts.length > 0 && (
-            <Reveal delay={0.18}>
-              <Section icon={FileStack} title="Evidence conflicts">
-                <div className="space-y-3">
-                  {conflicts.map((c: any, i: number) => (
-                    <div key={i} className="rounded-xl border border-border p-3 text-sm">
-                      <p className="font-medium text-ink">{c.field}</p>
-                      <p className="text-ink-muted mt-1">Found: {(c.values || []).join(" · ")}</p>
-                      <p className="text-ink-muted mt-1">Using: <span className="text-ink">{c.used_value}</span> — {c.reason}</p>
-                    </div>
-                  ))}
-                </div>
-              </Section>
-            </Reveal>
-          )}
-
-          {publications.length > 0 && (
+          {(publications.length > 0 || editing) && (
             <Reveal delay={0.2}>
               <Section icon={BookOpen} title="Publications">
-                <Timeline
-                  items={publications.map((p: any) => ({
-                    title: p.title,
-                    subtitle: p.venue,
-                    meta: p.year,
-                  }))}
-                />
+                {editing ? (
+                  <ListFieldEditor
+                    items={publications}
+                    fields={EDITABLE_ARRAY_FIELDS.publications as any}
+                    emptyItem={EMPTY_ITEMS.publications}
+                    onChange={(items) => setDraft({ ...draft, publications: items })}
+                  />
+                ) : (
+                  <Timeline
+                    items={publications.map((p: any) => ({
+                      title: p.title,
+                      subtitle: p.venue,
+                      meta: p.year,
+                    }))}
+                  />
+                )}
               </Section>
             </Reveal>
           )}
@@ -221,25 +416,12 @@ export default function ProfilePage() {
             </Card>
           </Reveal>
 
-          {provenance.length > 0 && (
-            <Reveal delay={0.04}>
-              <Card className="p-5">
-                <h3 className="text-sm font-medium text-ink mb-3">Evidence provenance</h3>
-                <ul className="space-y-2">
-                  {provenance.slice(0, 8).map((p: any, i: number) => (
-                    <li key={i} className="text-xs text-ink-muted">
-                      <span className="text-ink">{p.fact}</span> · {(p.sources || []).join(", ")}
-                    </li>
-                  ))}
-                </ul>
-              </Card>
-            </Reveal>
-          )}
-
           <Reveal delay={0.05}>
             <Card className="p-5">
               <h3 className="text-sm font-medium text-ink mb-3">Skills</h3>
-              {skills.length === 0 ? (
+              {editing ? (
+                <TagsEditor value={skills} onChange={(v) => setDraft({ ...draft, skills: v })} />
+              ) : skills.length === 0 ? (
                 <EmptyRow text="No skills listed." />
               ) : (
                 <div className="flex flex-wrap gap-1.5">
@@ -256,7 +438,14 @@ export default function ProfilePage() {
               <h3 className="text-sm font-medium text-ink mb-3 flex items-center gap-1.5">
                 <Award size={14} className="text-accent" /> Test scores
               </h3>
-              {testScores.length === 0 ? (
+              {editing ? (
+                <ListFieldEditor
+                  items={testScores}
+                  fields={EDITABLE_ARRAY_FIELDS.test_scores as any}
+                  emptyItem={EMPTY_ITEMS.test_scores}
+                  onChange={(items) => setDraft({ ...draft, test_scores: items })}
+                />
+              ) : testScores.length === 0 ? (
                 <EmptyRow text="No test scores listed." />
               ) : (
                 <div className="space-y-2">
@@ -274,7 +463,9 @@ export default function ProfilePage() {
           <Reveal delay={0.15}>
             <Card className="p-5">
               <h3 className="text-sm font-medium text-ink mb-3">Awards</h3>
-              {awards.length === 0 ? (
+              {editing ? (
+                <TagsEditor value={awards} onChange={(v) => setDraft({ ...draft, awards: v })} />
+              ) : awards.length === 0 ? (
                 <EmptyRow text="No awards listed." />
               ) : (
                 <ul className="space-y-1.5">

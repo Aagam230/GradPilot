@@ -147,11 +147,13 @@ export default function AnalysisJobPage() {
 
   const sources = result._evidence_sources || [];
   const dimensions = [
+    ["Applicant Strength", result.applicant_strength],
     ["Academic Fit", result.academic_fit],
     ["Research Fit", result.research_fit],
     ["Project Fit", result.project_fit],
     ["Experience Fit", result.experience_fit],
     ["Program Alignment", result.program_alignment],
+    ["Program Competitiveness", result.program_competitiveness],
   ] as const;
 
   return (
@@ -160,17 +162,10 @@ export default function AnalysisJobPage() {
         <h1 className="text-2xl font-semibold tracking-tight mb-1">
           {lastJob ? `${lastJob.universityName} — ${lastJob.programName}` : "Fit analysis"}
         </h1>
-        <div className="flex flex-wrap items-center gap-3 mt-3">
+        <div className="flex items-center gap-3 mt-3">
           <ClassificationBadge classification={result.overall_classification} />
-          {result.profile_fit && (
-            <span className="text-xs text-ink-muted border border-border rounded-full px-3 py-1.5">
-              Profile fit: <span className="font-medium text-ink">{result.profile_fit}</span>
-            </span>
-          )}
-          {result.classification_confidence && (
-            <span className="text-xs text-ink-muted border border-border rounded-full px-3 py-1.5">
-              Confidence: <span className="font-medium text-ink">{result.classification_confidence}</span>
-            </span>
+          {result.confidence && (
+            <span className="text-xs text-ink-faint">Confidence: {result.confidence}</span>
           )}
         </div>
         <p className="mt-4 text-ink-muted max-w-2xl leading-relaxed">{result.overall_fit_summary}</p>
@@ -199,6 +194,24 @@ export default function AnalysisJobPage() {
         <ListCard title="Profile gaps" items={result.profile_gaps} tone="target" />
         <ListCard title="Recommended improvements" items={result.recommended_improvements} tone="accent" />
       </div>
+
+      {result.community_outcome_evidence?.length > 0 && (
+        <Card className="p-5 mb-8 border-target/25 bg-target/5">
+          <h2 className="text-sm font-medium text-ink mb-1">Community-reported outcomes</h2>
+          <p className="text-xs text-ink-faint mb-3">
+            Self-reported by applicants on public forums — unverified, not official data. Used only
+            as a secondary signal.
+          </p>
+          <ul className="space-y-1.5">
+            {result.community_outcome_evidence.map((o: any, i: number) => (
+              <li key={i} className="text-sm text-ink-muted flex items-start gap-2">
+                <span className="text-ink-faint">·</span>
+                {o.summary}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       {sources.length > 0 && (
         <Card className="p-5">

@@ -35,10 +35,8 @@ Merging rules:
 - When documents conflict or give different precision for the same fact (e.g. GPA on a CV vs. an
   official transcript, or a test score on a CV vs. an official score report), prefer the more
   authoritative source: transcript > CV for GPA/coursework; official score report > CV for test
-  scores. Put the retained value in the factual field and record the discrepancy in
-  "evidence_conflicts" so the student can review it.
-- Fill "source_provenance" with concise mappings of important facts to the document type(s) that
-  support them. Do not claim provenance that is not present in the supplied documents.
+  scores. Note in the field only the value you kept — don't include a note about the conflict in
+  a factual field's value itself.
 - Research papers/publications should inform "research_experience" and "publications"; do not
   fabricate an abstract or finding that isn't stated in the document.
 - A statement of purpose (SOP), if present, should inform "goals_and_motivation" — a factual
@@ -59,8 +57,6 @@ Respond with strict JSON only, matching this schema:
   "awards": [string],
   "coursework_highlights": [string],
   "goals_and_motivation": string|null,
-  "evidence_conflicts": [{"field": string, "values": [string], "used_value": string, "reason": string}],
-  "source_provenance": [{"fact": string, "sources": [string]}],
   "summary": string
 }"""
 

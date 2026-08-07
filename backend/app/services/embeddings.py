@@ -1,20 +1,20 @@
-"""Local sentence-transformer embeddings for GradPilot."""
+"""Local MiniLM embeddings (384 dimensions), matching the GradPilot pgvector schema."""
 from functools import lru_cache
 from ..config import settings
 
 
 @lru_cache(maxsize=1)
 def _model():
-    if settings.embedding_provider != "local":
-        raise ValueError(f"Unknown EMBEDDING_PROVIDER: {settings.embedding_provider}")
     from sentence_transformers import SentenceTransformer
     return SentenceTransformer(settings.embedding_model)
 
 
 def embed_texts(texts: list[str]) -> list[list[float]]:
+    if settings.embedding_provider != "sentence_transformers":
+        raise ValueError(f"Unknown EMBEDDING_PROVIDER: {settings.embedding_provider}")
     if not texts:
         return []
-    vectors = _model().encode(texts, normalize_embeddings=True)
+    vectors = _model().encode(texts, normalize_embeddings=True, show_progress_bar=False)
     return vectors.tolist()
 
 

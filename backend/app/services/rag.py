@@ -17,7 +17,17 @@ def chunk_text(text: str, size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) 
         start = end - overlap
         if start <= 0:
             break
-    return [c.strip() for c in chunks if len(c.strip()) > 50]
+
+    filtered = [c.strip() for c in chunks if len(c.strip()) > 50]
+    if filtered:
+        return filtered
+
+    # The >50-char filter exists to drop tiny meaningless fragments left over when a LARGE
+    # document gets split into many pieces — it should never cause a short-but-substantive whole
+    # input (e.g. a brief manual-paste fallback) to be silently discarded entirely. If filtering
+    # removed everything, fall back to the original text as a single chunk when it's non-trivial.
+    stripped = text.strip()
+    return [stripped] if len(stripped) > 10 else []
 
 
 def ingest_pages(db: Session, program_id, pages: list[dict]) -> int:

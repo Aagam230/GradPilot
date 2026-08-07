@@ -38,6 +38,15 @@ export async function deleteDocument(profileId: string, documentId: string) {
   return handle(res) as Promise<{ profile_id: string; profile: any; documents: DocumentSummary[] }>;
 }
 
+export async function updateProfile(profileId: string, edits: Record<string, any>) {
+  const res = await fetch(`${API_BASE}/api/profile/${profileId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(edits),
+  });
+  return handle(res) as Promise<{ profile_id: string; profile: any; documents: DocumentSummary[] }>;
+}
+
 export async function retrieveProgram(params: {
   university_name: string;
   program_name: string;

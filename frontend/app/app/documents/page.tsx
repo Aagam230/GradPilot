@@ -71,8 +71,9 @@ export default function DocumentsPage() {
           <div className="mt-5 flex items-start gap-2 text-xs text-ink-faint">
             <Info size={13} className="mt-0.5 shrink-0" />
             <span>
-              Only a CV is required to start. Each additional document is merged into the same
-              profile — nothing is fabricated for documents you haven&apos;t uploaded.
+              Only a CV is required to start. Re-uploading a document type replaces the previous
+              version. Scanned PDFs are read automatically with OCR. Nothing is fabricated for
+              documents you haven&apos;t uploaded.
             </span>
           </div>
 
